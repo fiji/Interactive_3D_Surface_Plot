@@ -40,6 +40,13 @@
 		</plugins>
 	</build>
 
+	<scm>
+		<connection>scm:git:git://github.com/fiji/Interactive_3D_Surface_Plot</connection>
+		<developerConnection>scm:git:git@github.com:fiji/Interactive_3D_Surface_Plot</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/fiji/Interactive_3D_Surface_Plot</url>
+	</scm>
+
 	<repositories>
 		<!-- NB: for project parent, in case of partial checkout -->
 		<repository>
