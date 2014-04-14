@@ -40,6 +40,11 @@
 		</plugins>
 	</build>
 
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/job/Interactive_3D_Surface_Plot/</url>
+	</ciManagement>
+
 	<scm>
 		<connection>scm:git:git://github.com/fiji/Interactive_3D_Surface_Plot</connection>
 		<developerConnection>scm:git:git@github.com:fiji/Interactive_3D_Surface_Plot</developerConnection>
