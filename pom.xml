@@ -18,9 +18,28 @@
 	<name>plugins/Interactive_3D_Surface_Plot.jar</name>
 	<description></description>
 
+	<scm>
+		<connection>scm:git:git://github.com/fiji/Interactive_3D_Surface_Plot</connection>
+		<developerConnection>scm:git:git@github.com:fiji/Interactive_3D_Surface_Plot</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/fiji/Interactive_3D_Surface_Plot</url>
+	</scm>
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/job/Interactive_3D_Surface_Plot/</url>
+	</ciManagement>
+
 	<properties>
 		<main-class>Interactive_3D_Surface_Plot</main-class>
 	</properties>
+
+	<repositories>
+		<!-- NB: for project parent -->
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<!-- ImageJ dependencies -->
@@ -44,25 +63,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://jenkins.imagej.net/job/Interactive_3D_Surface_Plot/</url>
-	</ciManagement>
-
-	<scm>
-		<connection>scm:git:git://github.com/fiji/Interactive_3D_Surface_Plot</connection>
-		<developerConnection>scm:git:git@github.com:fiji/Interactive_3D_Surface_Plot</developerConnection>
-		<tag>HEAD</tag>
-		<url>https://github.com/fiji/Interactive_3D_Surface_Plot</url>
-	</scm>
-
-	<repositories>
-		<!-- NB: for project parent -->
-		<repository>
-			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
-		</repository>
-	</repositories>
 
 </project>
