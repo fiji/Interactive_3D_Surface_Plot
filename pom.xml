@@ -18,6 +18,10 @@
 	<name>plugins/Interactive_3D_Surface_Plot.jar</name>
 	<description></description>
 
+	<properties>
+		<main-class>Interactive_3D_Surface_Plot</main-class>
+	</properties>
+
 	<dependencies>
 		<!-- ImageJ dependencies -->
 		<dependency>
@@ -33,7 +37,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>Interactive_3D_Surface_Plot</mainClass>
+							<mainClass>${main-class}</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
