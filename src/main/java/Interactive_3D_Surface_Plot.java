@@ -1725,7 +1725,7 @@ private JSlider createSliderHorizontal(String borderTitle, int min, int max, int
 		Font sliderFont = new Font("Sans", Font.PLAIN, 11);
 		
 		// create slider
-		JSlider slider = new JSlider(JSlider.HORIZONTAL, min, max, value);
+		JSlider slider = createSliderSafe(JSlider.HORIZONTAL, min, max, value);
 		slider.setBorder(new TitledBorder(
 				empty, borderTitle, TitledBorder.CENTER, 
 				TitledBorder.BELOW_TOP,	sliderFont)); 		
@@ -1749,7 +1749,7 @@ private JSlider createSliderHorizontal(String borderTitle, int min, int max, int
 	Font sliderFont = new Font("Sans", Font.PLAIN, 11);
 	
 	// create slider
-	JSlider slider = new JSlider(JSlider.VERTICAL, min, max, value);
+	JSlider slider = createSliderSafe(JSlider.VERTICAL, min, max, value);
 	slider.setBorder(new TitledBorder(
 			empty, borderTitle, TitledBorder.CENTER, 
 			TitledBorder.BELOW_TOP,	sliderFont)); 		
@@ -1762,6 +1762,36 @@ private JSlider createSliderHorizontal(String borderTitle, int min, int max, int
 	
 	return slider;
 }
+
+	/**
+	 * Helper method to create a JSlider without the chance for exceptions due to
+	 * invalid range properties (min, max, default value)
+	 */
+	private JSlider createSliderSafe(final int orientation, int min, int max,
+		int value)
+	{
+		// Avoid invalid min/max values
+		if (min >= max || max <= min) {
+			IJ.log("WARNING: Interactive 3D surface plot attempted to create slider with invalid min: " +
+				min + " and max: " + max);
+			// When one of min or max is invalid the intended range is arbitrary..
+			max = min + 1;
+		}
+
+		// Cap default value at min/max
+		if (value < min){
+			IJ.log("WARNING: Interactive 3D surface plot attempted to create slider with value: " +
+				value + ". Capping at lower bound: " + min);
+			value = min;
+		}
+		else if (value > max) {
+			IJ.log("WARNING: Interactive 3D surface plot attempted to create slider with invalid value: " +
+				value + ". Capping at upper bound: " + max);
+			value = max;
+		}
+
+		return new JSlider(orientation, min, max, value);
+	}
 
 	
 	private void setSliderTitle(JSlider slider, Color color, String str) {
