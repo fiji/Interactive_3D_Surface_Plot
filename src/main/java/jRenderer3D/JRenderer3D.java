@@ -254,6 +254,7 @@ public class JRenderer3D {
 	private int 		surfacePlot_gridHeight= SURFACEGRID_DEFAULTHEIGHT;
 	private ImagePlus 	surfacePlot_imagePlusData = null;   // image used for the surface plot 
 	private ImagePlus 	surfacePlot_imagePlusTexture = null; // texture image
+	private ImagePlus 	surfacePlot_imagePlusMask = null; // mask image
 	private int 		surfacePlot_plotMode = SURFACEPLOT_LINES;
 	private int 		surfacePlot_lutNr = LUT_ORIGINAL;
 	private double		surfacePlot_light = 0;
@@ -1040,6 +1041,14 @@ public class JRenderer3D {
 		surfacePlot_imagePlusTexture = impTexture;
 		if (surfacePlot != null) {
 			surfacePlot.setSurfacePlotTextureImage(impTexture);
+			surfacePlot.resample();
+		}
+	}
+
+	public void setSurfacePlotMask(ImagePlus impMask) {
+		surfacePlot_imagePlusMask = impMask;
+		if (surfacePlot != null) {
+			surfacePlot.setSurfacePlotMaskImage(impMask);
 			surfacePlot.resample();
 		}
 	}

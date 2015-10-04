@@ -55,6 +55,9 @@ class SurfacePlot {
 	private int widthTex;
 	private int heightTex;
 	private int[] pixelsTexColor;
+	private int widthMaskImage;
+	private int heightMaskImage;
+	private byte[] pixelsMaskImage;
 	private byte[] maskPixels;
 	
 	
@@ -74,7 +77,6 @@ class SurfacePlot {
 	}
 	
 	protected void setSurfacePlotImage(ImagePlus imp){
-	
 			int widthTmp = imp.getWidth();
 			int heightTmp = imp.getHeight();
 	
@@ -251,8 +253,12 @@ class SurfacePlot {
 			pixelsTexColor =  null;
 		}
 	}
-	
 
+	protected void setSurfacePlotMaskImage(ImagePlus imp){
+		widthMaskImage = imp.getWidth();
+		heightMaskImage = imp.getHeight();
+		pixelsMaskImage = (byte []) imp.getProcessor().getPixels();
+	}
 
 	protected void resample(){
 		
@@ -309,6 +315,24 @@ class SurfacePlot {
 					int xB = (int) (x * sx);
 					
 					plotList[pos].color = pixelsTexColor[yB * widthTex + xB];
+				}
+			}
+		}
+
+		if (pixelsMaskImage != null) {
+
+			double sx = widthMaskImage / (double) gridWidth;
+			double sy = heightMaskImage / (double) gridHeight;
+
+			for (int y = 0; y < gridHeight; y++) {
+				int yB = (int) (y * sy);
+
+				for (int x = 0; x < gridWidth; x++) {
+					int pos = y * gridWidth + x;
+
+					int xB = (int) (x * sx);
+
+					plotList[pos].isVisible = pixelsMaskImage[yB * widthMaskImage + xB] == 0 ? false : true;
 				}
 			}
 		}
