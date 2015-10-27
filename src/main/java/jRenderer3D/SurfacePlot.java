@@ -56,6 +56,7 @@ class SurfacePlot {
 	private int heightTex;
 	private int[] pixelsTexColor;
 	private byte[] maskPixels;
+	private boolean hasOtherLut = false;
 	
 	
 	protected void draw() {
@@ -81,6 +82,7 @@ class SurfacePlot {
 			ImageProcessor ip = imp.getProcessor();
 	
 			lut = new Lut();
+			
 	
 			int[] pixelsTmp = new int[widthTmp*heightTmp];
 	
@@ -92,6 +94,10 @@ class SurfacePlot {
 			} catch (InterruptedException ex) {IJ.error("error grabbing pixels");}
 	
 			boolean isLut = ip.isColorLut();
+			if (isLut) {
+				lut.readLut(imp);
+				hasOtherLut  = true;
+			}
 	
 			byte[] lutPixels = null;
 	
@@ -105,6 +111,8 @@ class SurfacePlot {
 	
 					double min_ = ip.getMin();
 					double max_ = ip.getMax();
+					//IJ.log("surf min: " + min_);   //LL ================================
+					//IJ.log("surf max: " + max_);   //LL ================================
 					double a = 0, b = 1;
 	
 					Calibration cal = imp.getCalibration();
@@ -144,7 +152,8 @@ class SurfacePlot {
 						int pos = 0;
 						for (int y = 0; y < heightTmp; y++) {
 							for (int x = 0; x <widthTmp; x++) {
-								float value = (float) (pixels[pos++] - min);
+								// float value = (float) (pixels[pos++] - min);
+								float value = (float) (pixels[pos++] - min_); // LL ==============
 								if (value<0f) value = 0f;
 								int ivalue = (int)(value*scale);
 	
@@ -169,7 +178,7 @@ class SurfacePlot {
 					maskPixels = (byte[])ipMask.getPixels();
 				}
 	
-				Rectangle rect = roi.getBoundingRect();
+				Rectangle rect = roi.getBounds();
 				if (rect.x < 0)
 					rect.x = 0;
 				if (rect.y < 0)
@@ -1073,7 +1082,7 @@ class SurfacePlot {
 	}
 	
 	public int getSurfacePlotLut() {
-		return lutNr;
+		return lut.getLutNr();
 	}
 
 	protected void setMinMax(int min, int max) {
@@ -1090,6 +1099,10 @@ class SurfacePlot {
 
 	public int getInversefactor() {
 		return inversefactor;
+	}
+
+	public boolean hasOtherLut() {
+		return hasOtherLut;
 	}
 }
 

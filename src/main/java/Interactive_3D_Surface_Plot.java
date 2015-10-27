@@ -7,7 +7,9 @@ import ij.Prefs;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.NewImage;
+import ij.gui.PolygonRoi;
 import ij.gui.Roi;
+import ij.macro.Interpreter;
 import ij.measure.Calibration;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
@@ -51,6 +53,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -67,7 +70,22 @@ import javax.swing.event.ChangeListener;
 /*
  * Interactive_3D_SurfacePlot (was SurfacePlot_3D) 
  *
- * (C) Author:  Kai Uwe Barthel: barthel (at) fhtw-berlin.de 
+ * (C) Author:  Kai Uwe Barthel: barthel (at) htw-berlin.de 
+ * 
+ * Version 2.4		
+ * 	        2015 October 17
+ *          - Background, line colors may be set
+ *          - Legend now works for external LUTs
+ *          - size of the plot can be set by a macro
+ *			- fixed a bug that caused the wrong setting of minvalue of 32 bit images with a LUT to 0 
+ *
+ * Version 2.33
+ * 			2011 April 21
+ * 			- fiexed a bug that caused an exeption if the min slider was set to -1
+ * 
+ * Version 2.32
+ * 			2008 October 24
+ * 			- the plugin is not visible when run in batch mode
  * 
  * Version 2.31
  * 			2008 August 17
@@ -133,7 +151,7 @@ import javax.swing.event.ChangeListener;
 
 public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, MouseMotionListener, ItemListener{
 	
-	private final String version = " v2.31 ";
+	private final String version = " v2.4 ";     
 
 	
 	// constants
@@ -172,8 +190,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 	
 	// application window
 	private JFrame frame;
-	
-	
+		
 	// panels
 	private JPanel mainPanel;
 	private JPanel settingsPanel1;
@@ -199,10 +216,8 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 	// image panel / canvas
 	private ImageRegion imageRegion;
 	
-	
 	// imageJ components
 	private ImagePlus image;	
-	
 	
 	// imgeJ3D API components
 	private JRenderer3D jRenderer3D;
@@ -210,7 +225,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 	
 	// other global params 
 	final static int SIZE = 600;
-	private int windowWidth = (int) (SIZE*1.1);
+	private int windowWidth = (int) (SIZE*1.2);
 	private int windowHeight = SIZE;
 	private int startWindowWidth = windowWidth;
 	private int startWindowHeight = windowHeight;
@@ -281,42 +296,42 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 
 	private boolean snapshot = false;
 
+
+	protected Color bgColor = Color.GRAY;
+	protected Color lineColor = Color.WHITE;
+
 	
 	
 	public static void main(String args[]) {
 		Interactive_3D_Surface_Plot sp = new Interactive_3D_Surface_Plot();
 		
 		new ImageJ(); // !!!
-//		
-//		//IJ.open("/users/barthel/Desktop/Depth_Image.tif");
-//		//		IJ.open("/users/barthel/Desktop/K2.tif");
-//		IJ.open("/Users/barthel/Pictures/Beispielbilder/plot2.tif");
-//		//IJ.open("/users/barthel/Desktop/image_128-1.png");
-//		//IJ.open("/users/barthel/Desktop/Dot_Blot.jpg");
-		IJ.open("/users/barthel/Applications/ImageJ/_images/blobs.tif");
+
+		//IJ.open("/Users/barthel/Pictures/Beispielbilder/plot2.tif");
+		//IJ.open("/Users/barthel/Pictures/Beispielbilder/baboon.jpg");
+		
+		//IJ.open("/Users/barthel/Pictures/Beispielbilder/InteractivePlot-32bit-grey.tif");
+		IJ.open("/Users/barthel/Pictures/Beispielbilder/InteractivePlot-32bit-jet.tif");
+				
 //		IJ.run("Set Scale...", "distance=1.001 known=100 pixel=1 unit=µm");
 //		//IJ.run("Set Scale...", "distance=2.2 known=5 pixel=1 unit=µm");
-		IJ.run("Set Scale...", "distance=12 known=100 pixel=1 unit=µm");
+//		IJ.run("Set Scale...", "distance=12 known=100 pixel=1 unit=µm");
 //		//IJ.run("Set Scale...", "distance=30 known=0.5 pixel=1 unit=µm");
 //		//IJ.run("Fire");
 //		//IJ.makeRectangle(80, 80, 4, 5);
-//		IJ.makeOval(40, 40, 120, 150);
-//		//IJ.run("makePolygon(98,147,163,92,243,127,206,228,147,197,150,180)");
-//		//IJ.makeLine(80, 80, 80,80);
-//		
-//		
-//		
+
 		sp.image = IJ.getImage();
-//		
+
+//		// ROI Test
 //		int[] xpoints = new int[]{98,163,243,206,147,150};
-//		int[] ypoints = new int[]{147,92,127,228,197,180};
+//		int[] ypoints = new int[]{147,92,127,144,150,180};
 //		Roi roi1 = new PolygonRoi(xpoints, ypoints, xpoints.length, Roi.POLYGON);
 //		sp.image.setRoi(roi1);
 //		
 //		Roi roi = sp.image.getRoi();
 //
 //		if (roi != null) {
-//			Rectangle rect = roi.getBoundingRect();
+//			Rectangle rect = roi.getBounds();
 //			if (rect.x < 0)
 //				rect.x = 0;
 //			if (rect.y < 0)
@@ -331,19 +346,13 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 //			}
 //		}
 //		else {
-			sp.imageWidth = sp.image.getWidth();
-			sp.imageHeight = sp.image.getHeight();
+//			sp.imageWidth = sp.image.getWidth();
+//			sp.imageHeight = sp.image.getHeight();
 //		}
-//		
-////		sp.image.show();
-////		sp.image.updateAndDraw();
 		
-		
-		
-	//	sp.generateSampleImage();
 
-		//sp.run("");	
-		sp.runApplication("Example Plot");
+		sp.run("");	
+		//sp.runApplication("Example Plot");
 	}
 	
 	private void generateSampleImage() {
@@ -412,7 +421,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 			Roi roi = image.getRoi();
 
 			if (roi != null) {
-				Rectangle rect = roi.getBoundingRect();
+				Rectangle rect = roi.getBounds();
 				if (rect.x < 0)
 					rect.x = 0;
 				if (rect.y < 0)
@@ -441,17 +450,16 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 
 	private void runApplication(String name) {	
 		// create window/frame 
-		String str = "Interactive 3D Surface Plot" + version + " (" + name +")";
+		String strFrame = "Interactive 3D Surface Plot" + version + " (" + name +")";
 		
-		frame = new JFrame(str);
 		if (!doReset ) {
 			//if (!calledFromMacro)
 			readPrefs();
 		}
-		str = Macro.getOptions();
+		String str = Macro.getOptions();
 		
 //		IJ.log("Options: " + str);
-//		str = "light=0.2 perspective=0.22 grid=64 plotType=3 smoot=11 colorType=3 min=30 max=60 scale=1.2 scaleZ=0.7";
+//		str = "windowWidt=1000 light=0.2 perspective=0.22 grid=64 plotType=3 smooth=11 colorType=3 min=30 max=60 scale=1.2 scaleZ=0.7 backgroundColor=8080FF lineColor=FFFF00";
 		
 		// read macro parameters
 		try {
@@ -460,11 +468,13 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 				ex1 = new StringTokenizer(str); //Split on Space (default)
 				
 				String[] params   = { "light=", "perspective=", "grid=", "smooth=", "plotType=", "colorType=", "drawAxes=", "drawLines=",
-						"drawText=","drawLegend=", "invertZ=", "isEqualxyzRatio=", "rotationX=", "rotationZ=", "scale=", "scaleZ=",	"min=", "max=", "snapshot="};
+						"drawText=","drawLegend=", "invertZ=", "isEqualxyzRatio=", "rotationX=", "rotationZ=", "scale=", "scaleZ=",	
+						"min=", "max=", "snapshot=", "backgroundColor=", "lineColor=" , "windowHeight=", "windowWidth=" };
 				
 				double[] paramVals = { light, perspective, grid, smooth, plotType, colorType, (drawAxes == true) ? 1 : 0, (drawLines == true) ? 1 : 0,
 						(drawText == true) ? 1 : 0, (drawLegend == true) ? 1 : 0, (invertZ == true) ? 1 : 0, (isEqualxyzRatio == true) ? 1 : 0,
-						rotationX, rotationZ, scaleSlider, zAspectRatioSlider, minSlider, maxSlider, (snapshot == true) ? 1 : 0};
+						rotationX, rotationZ, scaleSlider, zAspectRatioSlider, 
+						minSlider, maxSlider, (snapshot == true) ? 1 : 0, bgColor.getRGB(), lineColor.getRGB(), windowHeight, windowWidth };
 				
 				String errorString=null;
 				while (ex1.hasMoreTokens()) {
@@ -474,7 +484,10 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 						String pattern = params[j];
 						if (str.lastIndexOf(pattern) > -1) { 
 							int pos = str.lastIndexOf(pattern) + pattern.length();
-							paramVals[j] = Double.parseDouble(str.substring(pos));
+							if (pattern.equals("backgroundColor=") || pattern.equals("lineColor="))
+								paramVals[j] = Integer.parseInt(str.substring(pos), 16);
+							else
+								paramVals[j] = Double.parseDouble(str.substring(pos));
 							found = true;
 //							IJ.log("" + params[j] + ": " + paramVals[j]); 
 						}
@@ -504,6 +517,12 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 				minSlider = (int) Math.min(99, Math.max(0,paramVals[16]));
 				maxSlider = (int) Math.min(100, Math.max(1,paramVals[17]));
 				snapshot = (paramVals[18] == 1) ? true : false;
+				
+				bgColor = new Color((int) paramVals[19]); 
+				lineColor = new Color((int) paramVals[20]); 
+				
+				windowHeight = (int) paramVals[21]; 
+				windowWidth = (int) paramVals[22]; 
 			}
 		} catch (NumberFormatException e1) {
 			macroError(" Incorrect parameter ! ");
@@ -511,33 +530,47 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 
 		doReset = false;
 
-		// create application gui
-		createGUI();				
+		boolean batch = false;
 		
-		frame.setLocation(xloc, yloc);
+		if (Interpreter.isBatchMode()) {
+			batch = true;
+		}
 
+		setupImageRegion();
+		
+		if (!batch) {
+			// create application gui
+			frame = new JFrame(strFrame);
+			createGUI();						
+			frame.setLocation(xloc, yloc);
+		}
+		
 		// creates the 3d renderer // NOTE: image must be loaded
 		create3DRenderer();
 
-		frame.pack();
-		
-		frame.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                writePrefs();
-                e.getWindow().dispose();
-                //WindowManager.removeWindow (frame); // if you add ISP3D to windowmanager
-            }
-        });
+		if (!batch) {	
+			frame.pack();
+
+			frame.addWindowListener(new WindowAdapter() {
+				public void windowClosing(WindowEvent e) {
+					writePrefs();
+					e.getWindow().dispose();
+					//WindowManager.removeWindow (frame); // if you add ISP3D to windowmanager
+				}
+			});
+		}
 		
 		if (snapshot) {
 			imageRegion.saveToImageJImage(image.getShortTitle());
-			frame.dispose();
+			if (!batch)
+				frame.dispose();
 		}
 	}
 	
     private void macroError(String errorStr) {
     	String str = 
-    		"Valid macro parameters are:\n" +
+    		"Error: \"" + errorStr + "\" \n \n" +
+    	    "Valid macro parameters are:\n" +
     		" \n" +
     		"Keyword=Default    [Range]\n" +
     		" \n" +
@@ -547,7 +580,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
     		"drawLines=1            [0 / 1]\n" +
     		"drawText=1             [0 / 1]\n" +
     		"drawLegend=1        [0 / 1]\n" +
-    		"grid=128                  [16 .. 512]\n" +
+    		"grid=128                  [16 .. 1024]\n" +
     		"smooth=0                [0 .. 100]\n" +
     		"perspective=0.1       [0 .. 1]\n" +
     		"light=0.2                   [0 .. 1]\n" +
@@ -556,12 +589,14 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
     		"rotationX=65           [-180 .. 180]\n" +
     		"rotationZ=-22.5      [-180 .. 180]\n" +
     		"scale=1                     [0.25 .. 3]\n" +
-    		"scaleZ=1                   [0.1  .. 5]\n" +
+    		"scaleZ=1                   [0.1  .. 10]\n" +
     		"max=100                 [1 .. 100]\n" +
     		"min=0                       [0 .. 99]             \n" +
-    		"snapshot=0        [0 / 1]\n" +
-    		" \n" +
-    		"Error: \"" + errorStr + "\"";
+    		"snapshot=0            [0 / 1]\n" +
+    		"backgroundColor=808080    [0 .. FFFFFF]\n" +
+    		"lineColor=0                              [0 .. FFFFFF]\n" +
+    		"windowHeight=600\n" +
+    		"windowWidth=720  (depending on your screen)\n";
 
     	IJ.showMessage("Error in macro parameter list!", str); 
    }
@@ -605,7 +640,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
         	yloc = (screenHeight-windowHeight-ins.bottom-ins.top - 75)/2;
         	light = 0.2;
         	perspective = 0.1;
-        	grid = 128;
+        	grid = 256;
         	smooth = 6;
         	plotType = FILLED;
         	colorType = GRADIENT;
@@ -627,7 +662,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
         	yloc = (int) Prefs.get("ISP3D.yloc", 50);
         	light = Prefs.get("ISP3D.light", 0.2);
         	perspective = Prefs.get("ISP3D.perspective", 0);
-        	grid = (int) Prefs.get("ISP3D.grid", 128);
+        	grid = (int) Prefs.get("ISP3D.grid", 256);
         	smooth = Prefs.get("ISP3D.smooth", 0);
         	plotType = (int) Prefs.get("ISP3D.plotType", LINES);
         	colorType = (int) Prefs.get("ISP3D.colorType", ORIGINAL);
@@ -643,8 +678,11 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
         	windowWidth = (int) Prefs.get("ISP3D.windowWidth", windowWidth);
         	scaleSlider = Prefs.get("ISP3D.scale", scaleSlider);
         	zAspectRatioSlider = Prefs.get("ISP3D.zScale", zAspectRatioSlider);
-        	minSlider = (int) Prefs.get("ISP3D.min", minSlider);	
-        	maxSlider = (int) Prefs.get("ISP3D.max", maxSlider);	
+        	minSlider = Math.min(Math.max((int) Prefs.get("ISP3D.min", minSlider),0), 99);	
+        	maxSlider = Math.min(Math.max((int) Prefs.get("ISP3D.max", maxSlider),1),100);	
+        	
+        	bgColor = new Color((int) Prefs.get("ISP3D.bgColor", Color.GRAY.getRGB()));
+        	lineColor = new Color((int) Prefs.get("ISP3D.lineColor", Color.WHITE.getRGB()));
         } 
     }
 	
@@ -680,9 +718,6 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 //		IJ.log("Y: " + scaledHeight);
 //		IJ.log("scaled: " + cal.scaled());
 //		//IJ.log("Ratio: " + cal.());
-//		IJ.log("Min: " + minVal);
-//		IJ.log("Max: " + maxVal);
-		
 		
 		// create 3D renderer
 		// center in the middle of the image
@@ -717,12 +752,13 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		jRenderer3D.setSurfaceSmoothingFactor(smooth);
 		jRenderer3D.setSurfacePlotLight(light);
 		jRenderer3D.setSurfacePlotMinMax(minSlider, maxSlider);
+		jRenderer3D.setBackgroundColor(bgColor.getRGB()); 
 		
 		setSurfaceColorType(colorType); 
 		setSurfacePlotType(plotType);
 		
 
-		renderAndUpdateDisplay();
+		//renderAndUpdateDisplay();
 		try {
 			Thread.sleep(250);
 		} catch (InterruptedException e) {}
@@ -748,17 +784,20 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		//IJ.log("Z-Ratio: " + zRatioInit);
 		
 		jRenderer3D.setTransformZAspectRatio(zAspectRatio);
-		scaleSlider = sliderScale.getValue() / 100.; 
+		//scaleSlider = sliderScale.getValue() / 100.;  // ???
 		
 		double scale = scaleInit * scaleSlider * scaleWindow;
 		//IJ.log("ScaleInit: " + scaleInit + " ScaleWindow " + scaleWindow + " Scale " + scale);
 		
 		jRenderer3D.setTransformScale(scale);
 		
-		jRenderer3D.setTransformPerspective(sliderPerspective.getValue()/100.);
+		//jRenderer3D.setTransformPerspective(sliderPerspective.getValue()/100.); // ???
+		jRenderer3D.setTransformPerspective(perspective);
 		
 		maxDistance = Math.max(scaledWidth, Math.max(scaledHeight, 256*Math.max(zAspectRatio,1)));
 		jRenderer3D.setTransformMaxDistance(maxDistance);
+		
+		jRenderer3D.setLegendTextColor(lineColor);
 		
 		addCoordinateSystem();
 		
@@ -784,15 +823,13 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		jRenderer3D.setMinZValue(minZ);
 		jRenderer3D.setMaxZValue(maxZ);
 		
-
 		// add text to the coordinate system
-		
-		double off =  12 / scaleInit;  // text position offset
-		double fontSize = 10 / scaleInit;
+		double off =  16 / scaleInit;   
+		double fontSize = 12 / scaleInit; 
 		double offZ = off/zAspectRatio;
 		int ticksDist = 40;
-		Color textColor = Color.white;
-		Color lineColor = new Color(90,90,100);
+		
+		Color textColor = lineColor;
 		
 		double x1 = 0;
 		double y1 = 0;
@@ -866,8 +903,8 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		double d = maxZ-minZ;
 		numTicks = (int) Math.round(255*zAspectRatio*scaleInit / (ticksDist/1.3));
 		//System.out.println("numTicks: " + numTicks);
-		if (numTicks <= 2)
-			numTicks = 3;
+		if (numTicks < 2)  
+			numTicks = 2;  
 		stepValue = calcStepSize(d, numTicks);
 		
 		x1 = 0;
@@ -880,14 +917,11 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		
 		for (double value=0; value+delta<=d; value += stepValue) {
 			String s;
-			if (/*Math.abs(value) > 1 && */Math.floor(minStart+value) - (minStart+value) == 0)
+			if (Math.floor(minStart+value) - (minStart+value) == 0)
 				s = "" + (int)(minStart+value);
 			else
 				s = "" + (int)Math.round((minStart+value)*1000)/1000.;
-			
-			if (value + stepValue > d || value == d) {
-				s = "z";
-			}
+
 			pos = ((value+delta) * id / d);
 			if (pos >= 0) {
 				z1 = z2 = pos;
@@ -906,8 +940,23 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 			}
 		}
 		
+		double myvalue = d + stepValue/1.3; 
+		String mys = "  z";
+		double fontzoom = 1.;
+			pos = ((myvalue+delta) * id / d);
+			if (pos >= 0) {
+				z1 = z2 = pos;
+				if (invertZ)
+					z1 = z2 = 255-pos;
+				jRenderer3D.addText3D(new Text3D(mys,  x1-off,  y1-off,  z1, textColor, fontSize*fontzoom, 4));
+				jRenderer3D.addText3D(new Text3D(mys,  x2+off,  y2+off,  z2, textColor, fontSize*fontzoom));
+				jRenderer3D.addText3D(new Text3D(mys,  x1-off,  y2+off,  z1, textColor, fontSize*fontzoom));
+				jRenderer3D.addText3D(new Text3D(mys,  x2+off,  y1-off,  z2, textColor, fontSize*fontzoom));			
+			}
+		
+		
 		// add coordinate system
-		jRenderer3D.add3DCube(0, 0, 0, imageWidth, imageHeight, id, Color.white);
+		jRenderer3D.add3DCube(0, 0, 0, imageWidth, imageHeight, id, lineColor);
 	}
 	
 	double calcStepSize( double range, double targetSteps )
@@ -942,8 +991,10 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 	 */
 	private void renderAndUpdateDisplay() {
 		jRenderer3D.doRendering();
-		imageRegion.setImage(jRenderer3D);
-		imageRegion.repaint();
+		if (imageRegion != null) {
+			imageRegion.setImage(jRenderer3D);
+			imageRegion.repaint();
+		}
 	}	
 	
 	/********************************************************
@@ -1134,7 +1185,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 			minSlider = sliderMin.getValue();
 			
 			if (minSlider >= maxSlider) {
-				maxSlider = Math.min(101,minSlider + 1);
+				maxSlider = Math.min(100,minSlider + 1);
 				sliderMax.setValue(maxSlider);
 				sliderMax.repaint();
 			}
@@ -1153,7 +1204,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 			minSlider = sliderMin.getValue();
 			
 			if (maxSlider <= minSlider) {
-				minSlider = Math.max(-1,maxSlider - 1);
+				minSlider = Math.max(0,maxSlider - 1);
 				sliderMin.setValue(minSlider);
 				sliderMin.repaint();
 			}
@@ -1167,8 +1218,8 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 			addCoordinateSystem();
 		}
 		else if (slider == sliderZAspectRatio) {
-			zAspectRatioSlider = sliderZAspectRatio.getValue()/100.;
-			String str = "z-Scale:" + zAspectRatioSlider; 
+			zAspectRatioSlider = Math.pow(10, sliderZAspectRatio.getValue()/100.);
+			String str = "z-Scale:" +  IJ.d2s(zAspectRatioSlider, 2, 3) ; 
 			setSliderTitle(sliderZAspectRatio, Color.black, str );
 			zAspectRatio  = zAspectRatioSlider*zRatioInit;
 			jRenderer3D.setTransformZAspectRatio(zAspectRatio);
@@ -1269,13 +1320,43 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		return mainPanel;
 	}	
 	
+	private void setupImageRegion() {
+		// create image region
+		imageRegion = new ImageRegion();
+
+		// init size
+		imageRegion.setWidth(windowWidth);
+		imageRegion.setHeight(windowHeight);
+
+		imageRegion.addMouseListener(this);
+		imageRegion.addMouseMotionListener(this);
+
+		imageRegion.addKeyListener ( 			
+				new KeyAdapter() { 
+					private int number;
+
+					public void keyPressed (KeyEvent e){ 
+						if (e.isShiftDown()) {
+							//	System.out.println("Shift");
+						}
+						if (e.getKeyChar() == 's') {
+							number++;
+							String str = image.getShortTitle() + " (" + number +")";
+							imageRegion.saveToImageJImage(str);
+						}
+					} 
+				}  
+		); 
+		imageRegion.requestFocus();
+
+	}
+	
 	
 	private JPanel createImagePanel(){
 		// create image region
 		imageRegion = new ImageRegion();
 		
 		// init size
-
 		imageRegion.setWidth(windowWidth);
 		imageRegion.setHeight(windowHeight);
 		
@@ -1337,7 +1418,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 	}	
 	
 	private JPanel createSettingsPanelRight(){
-		Dimension sliderDim2 = new Dimension(70, 400);
+		Dimension sliderDim2 = new Dimension(80, 400);
 		
 		// create slider panel
 		JPanel sliderPanel2 = createSliderPanel2();					
@@ -1484,9 +1565,9 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 				doReset = true;
 				light = 0.2;
 	        	perspective = 0;
-	        	grid = 128;
+	        	grid = 256;
 	        	smooth = 3;
-	        	plotType = LINES;
+	        	plotType = FILLED;   
 	        	colorType = ORIGINAL;
 	        	drawAxes = true;
 	        	drawLines = true;
@@ -1497,11 +1578,13 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 	        	rotationX =  65;    
 	        	rotationZ =  39; 
 	        	startWindowHeight = windowHeight = SIZE;
-	        	startWindowWidth = windowWidth = (int) (1.1*SIZE);
+	        	startWindowWidth = windowWidth = (int) (1.2*SIZE);
 	        	scaleSlider = 1;
 				zAspectRatioSlider = 1;
 				minSlider = 0;
 				maxSlider = 100;
+				lineColor = Color.WHITE; 
+				bgColor = Color.GRAY;
 				
 				run("");
 				
@@ -1621,7 +1704,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		String str = "Grid Size: " + grid;
 		int gridSliderValue = (int)Math.round(Math.log(grid)/Math.log(2));
 		gridSliderValue = Math.min(9, Math.max(5, gridSliderValue));
-		sliderGridSize = createSliderHorizontal(str, 5, 9, gridSliderValue); // 32, 64, 128, 256, 512
+		sliderGridSize = createSliderHorizontal(str, 5, 10, gridSliderValue); // 32, 64, 128, 256, 512, 1024
 		
 		str = "Smoothing: " + (int)Math.round(smooth*100)/100.;
 		int smoothSliderValue = (int) (smooth * (512 / grid));
@@ -1637,7 +1720,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		JPanel miniPanel = new JPanel();
 		miniPanel.setLayout(new GridLayout(2,1,0,3));
 		
-		checkIsEqualxyzRatio = new JCheckBox("z-Ratio = xy-Ratio");
+		checkIsEqualxyzRatio = new JCheckBox("z = xy Ratio");
 		checkIsEqualxyzRatio.setFont(new Font("Sans", Font.PLAIN, 11));
 		checkIsEqualxyzRatio.setSelected(isEqualxyzRatio);
 		checkIsEqualxyzRatio.addItemListener (this);
@@ -1647,8 +1730,37 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		checkInverse.setSelected(invertZ);
 		checkInverse.addItemListener (this);
 		
+		JButton buttonBackgroundColor = new JButton("Background");
+		buttonBackgroundColor.setFont(new Font("Sans", Font.PLAIN, 11));
+		buttonBackgroundColor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				bgColor = JColorChooser.showDialog(null, "Choose background color", null);
+				if (bgColor != null){
+					jRenderer3D.setBackgroundColor(bgColor.getRGB());
+					renderAndUpdateDisplay();
+				}
+			}
+		});
+		
+		JButton buttonLineColor = new JButton("Line Color");
+		buttonLineColor.setFont(new Font("Sans", Font.PLAIN, 11));
+		buttonLineColor.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				lineColor = JColorChooser.showDialog(null, "Choose line & text color", null);
+				if (lineColor != null){
+					jRenderer3D.setLegendTextColor(lineColor);
+					addCoordinateSystem();	
+					renderAndUpdateDisplay();
+				}
+			}
+		});
+		
 		miniPanel.add(checkIsEqualxyzRatio);
 		miniPanel.add(checkInverse);
+		miniPanel.add(buttonBackgroundColor); 
+		miniPanel.add(buttonLineColor); 
+		
 		
 		// create slider panel
 		JPanel panel = new JPanel();
@@ -1685,7 +1797,7 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 			
 			setScaleAndZRatio();
 		}
-	
+			
 		renderAndUpdateDisplay();
 	}
 
@@ -1697,11 +1809,11 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		str = "Scale: " + ((int)(scaleSlider*100))/100.;
 		sliderScale = createSliderVertical(str, 25, 300, (int)(scaleSlider*100));
 		str = "z-Scale: " + ((int)(zAspectRatioSlider*100))/100.;
-		sliderZAspectRatio = createSliderVertical(str, 10, 500, 100);
+		sliderZAspectRatio = createSliderVertical(str, -100, 100, (int)(100*Math.log10(zAspectRatioSlider)));   
 		str = "Min: " + minSlider + " %";
-		sliderMin = createSliderVertical(str, 0, 100, minSlider);
+		sliderMin = createSliderVertical(str, 0, 99, minSlider);
 		str = "Max: " + maxSlider + " %";
-		sliderMax = createSliderVertical(str, 0, 100, maxSlider);
+		sliderMax = createSliderVertical(str, 1, 100, maxSlider);
 		
 		// create slider panel
 		JPanel panel = new JPanel();
@@ -1819,6 +1931,10 @@ private JSlider createSliderHorizontal(String borderTitle, int min, int max, int
 	 */
 	class ImageRegion  extends JPanel {
 		
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private Image image;
 		private int width;
 		private int height;
