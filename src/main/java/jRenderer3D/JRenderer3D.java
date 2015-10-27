@@ -163,6 +163,7 @@ public class JRenderer3D {
 	
 	//	 Global rendering parameters
 	private Color backgroundColor = Color.gray;
+	private Color legendTextColor = Color.WHITE;
 	
 	
 	// transform parameters
@@ -290,7 +291,7 @@ public class JRenderer3D {
 	 */
 //	public static final int VOLUME_PROJECTION_TRILINEAR_BACK = 26;
 	
-	private Volume volume  = null;
+	private Volume volume  = null; 
 	
 	private int volume_drawMode = VOLUME_DOTS;
 	private int volume_threshold = 0;
@@ -432,7 +433,7 @@ public class JRenderer3D {
 		if (volume != null) {
 			volume.setBuffers(bufferPixels, zbufferPixels, bufferWidth, bufferHeight);
 			volume.setTransform(transform);
-		}	
+		}
 	}
 	
 	private void lines(){
@@ -766,14 +767,15 @@ public class JRenderer3D {
 		if (legend && surfacePlot != null) {
 			int lutNr = surfacePlot.getSurfacePlotLut();	
 
-			if (lutNr >= LUT_GRAY && lutNr <= LUT_THERMAL) {
+			if ((lutNr > LUT_ORIGINAL && lutNr <= LUT_THERMAL) || (lutNr == LUT_ORIGINAL && surfacePlot.hasOtherLut() ) ) 
+			{
 				int hLut = 256;
 				int wLut = 20;
 				int xs = bufferWidth - 30;
 				int xe = xs + wLut;
 				int ys = (bufferHeight-hLut)/2;
 				boolean isInverse = (surfacePlot.getInversefactor() == -1);
-				g2D.setColor(new Color (255, 255, 255));
+				g2D.setColor(legendTextColor);
 				g2D.drawRect(xs-1, ys-1, wLut+2, hLut+1);
 
 				for (int j = 0; j < 256; j++) {
@@ -787,8 +789,8 @@ public class JRenderer3D {
 				double minStart = Math.floor(minZ/stepValue)*stepValue;
 				double delta = minStart - minZ;
 
-				g2D.setColor(new Color (255, 255, 255));
-				font = new Font("Sans", Font.PLAIN, 11);
+				g2D.setColor(legendTextColor);
+				font = new Font("Sans", Font.PLAIN, 12);
 				g2D.setFont(font);
 				FontMetrics metrics = g2D.getFontMetrics();
 				int stringHeight = 5;
@@ -813,22 +815,24 @@ public class JRenderer3D {
 				}		
 			}
 		}		
-	
-		
-		font = new Font("Sans", Font.PLAIN, 13);
-		g2D.setFont(font);
-		
-		g2D.setColor(new Color (20, 25, 100));
-		g2D.drawString("ImageJ3D", bufferWidth - 66, bufferHeight - 6); 
-		g2D.setColor(new Color (255, 255, 255));
-		g2D.drawString("ImageJ3D", bufferWidth - 68, bufferHeight - 8); 
-		
-//		String str = "x: " + (int)Math.toDegrees(tr_rotationX) + " y: " + (int)Math.toDegrees(tr_rotationY) + " z: " + (int)Math.toDegrees(tr_rotationZ);
-//		g2D.drawString(str, 10, 20); 
-//		String str1 = "x: " + (int)Math.toDegrees(transform.angleX) + " y: " + (int)Math.toDegrees(transform.angleY) + " z: " + (int)Math.toDegrees(transform.angleZ);
-//		g2D.drawString(str1, 10, 40); 		
 	}
 	
+	public void showRotation() {
+		Font font = new Font("Sans", Font.PLAIN, 13);
+		g2D.setFont(font);
+		String str = "Rotation x = " + (int)Math.toDegrees(transform.getRotationX()) + "\u00b0" + ", Rotation z =" + (int)Math.toDegrees(transform.getRotationZ()) + "\u00b0";
+		g2D.drawString(str, 10, 20); 
+	}
+	
+	
+	public Color getLegendTextColor() {
+		return legendTextColor;
+	}
+
+	public void setLegendTextColor(Color legendTextColor) {
+		this.legendTextColor = legendTextColor;
+	}
+
 	double calcStepSize( double range, double targetSteps )
 	{
 	    // Calculate an initial guess at step size
@@ -923,6 +927,10 @@ public class JRenderer3D {
 			cubeLines();
 		}
 		finishAndDrawText();
+		
+		if (getSurfacePlotMode() == JRenderer3D.SURFACEPLOT_DOTSNOLIGHT)
+			showRotation();
+			
 	}
 	
    /*************************************************************
@@ -1029,7 +1037,7 @@ public class JRenderer3D {
 		
 		
 		surfacePlot.setSurfacePlotMode(surfacePlot_plotMode);
-		surfacePlot.setSurfacePlotLut(surfacePlot_lutNr);
+		//surfacePlot.setSurfacePlotLut(surfacePlot_lutNr );
 		surfacePlot.setSurfacePLotSetLight(surfacePlot_light);
 
 		surfacePlot.setBuffers(bufferPixels, zbufferPixels, bufferWidth, bufferHeight);
@@ -1098,6 +1106,10 @@ public class JRenderer3D {
 			surfacePlot.setSurfacePlotMode(surfacePlot_plotMode);
 	}
 	
+	public int getSurfacePlotMode() {
+		return surfacePlot_plotMode;
+	}
+	
 	
 	/**
 	 * Sets the mode for drawing volumes.
@@ -1121,6 +1133,7 @@ public class JRenderer3D {
 			volume.setVolumeLut(volume_lutNr);
 		}
 	}
+	
 	/**
 	 * Set subsampling factors (used by the drawing mode volume dots). 
 	 * This allows faster drawing in the VOLUME_DOTS mode. 
@@ -1152,7 +1165,6 @@ public class JRenderer3D {
 			volume.setVolumeCutDist(this.volume_cutDist);
 		}
 	}
-
 	
 	/**
 	 * Sets the surface grid size (sampling rate).
@@ -1456,7 +1468,6 @@ public class JRenderer3D {
 			this.text3D.clear();
 	}
 	
-	
 	/**
 	 * Sets the buffer size. (The size of the rendered 2D image) 
 	 * 
@@ -1556,7 +1567,6 @@ public class JRenderer3D {
 	}
 	
 	
-	
 	/**
 	 * Sets the color lut for the surface plot.
 	 * <p>
@@ -1633,7 +1643,6 @@ public class JRenderer3D {
 		if (volume != null)
 			volume.setVolumeThreshold(threshold);
 	}	
-	
 	
 	/**
 	 * Sets the z-aspect ratio (the relative z-height of a voxel).
