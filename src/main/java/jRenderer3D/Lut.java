@@ -9,6 +9,7 @@ class Lut {
 	
 	int [] colors;
 	int [] origColors;
+	private int lutNr;
 	
 	Lut() {
 		colors = new int[256];
@@ -182,5 +183,13 @@ class Lut {
 		for (int i=0; i<256; i++) {
 			colors[i] = 0xff000000;
 		}
+	}
+	
+	public int getLutNr() {
+		return lutNr;
+	}
+
+	public void setLutNr(int lutNr) {
+		this.lutNr = lutNr;
 	}
 }
