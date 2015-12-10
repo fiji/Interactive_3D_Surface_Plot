@@ -71,7 +71,11 @@ import javax.swing.event.ChangeListener;
  * Interactive_3D_SurfacePlot (was SurfacePlot_3D) 
  *
  * (C) Author:  Kai Uwe Barthel: barthel (at) htw-berlin.de 
- * 
+ *
+ * * Version 2.4.1		
+ * 	        2015 December 10
+ *          - Added feature to use a visibility mask image for rendering. (credits to gokuld) 
+ *
  * Version 2.4		
  * 	        2015 October 17
  *          - Background, line colors may be set
@@ -151,8 +155,7 @@ import javax.swing.event.ChangeListener;
 
 public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, MouseMotionListener, ItemListener{
 	
-	private final String version = " v2.4 ";     
-
+	private final String version = " v2.4.1 ";     
 	
 	// constants
 	private final int DOTS = 0;
@@ -1499,6 +1502,14 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 				loadTextureImage();
 			}
 		});
+
+		// create mask image button
+		JButton maskImageButton = new JButton("Load Mask");
+		maskImageButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			    loadMaskImage();
+			}
+		});
 		
 		final JPopupMenu popup = new JPopupMenu();
 		
@@ -1604,13 +1615,14 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		
 		// create combo panel
 		JPanel panel = new JPanel();
-		panel.setLayout(new GridLayout(1, 5, 0, 0));		
+		panel.setLayout(new GridLayout(1, 6, 0, 0));
 		
 		
 	    // add elements to combo panel
 		panel.add(comboDisplayType);		
 		panel.add(comboDisplayColors);
 		panel.add(textureButton);
+		panel.add(maskImageButton);
 		panel.add(saveButton);
 		panel.add(optionsButton);
 		
@@ -1698,6 +1710,83 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		}
 	}
 
+	private void loadMaskImage() {
+		ImagePlus impMask = null;
+
+		int[] wList = WindowManager.getIDList();
+		boolean loadFromDisk = false;
+		if (wList==null) {
+			loadFromDisk = true;
+		}
+		else {
+			String[] titles = new String[wList.length + 1];
+			for (int i=0; i<wList.length; i++) {
+				ImagePlus imp = WindowManager.getImage(wList[i]);
+				if (imp!=null)
+					titles[i] = imp.getTitle();
+				else
+					titles[i] = "";
+			}
+			titles[wList.length] = "\"Load File from Disk\"";
+
+			GenericDialog gd = new GenericDialog("Load mask image", IJ.getInstance());
+
+			gd.addMessage("Please select an image to be used as a mask image.");
+
+			String defaultItem = titles[0];
+			gd.addChoice("Open Image:", titles, defaultItem);
+
+			gd.showDialog();
+			if (gd.wasCanceled())
+				return;
+			int index = gd.getNextChoiceIndex();
+			if(titles[index].equals("\"Load File from Disk\""))
+				loadFromDisk = true;
+			else {
+				impMask = WindowManager.getImage(wList[index]);
+			}
+		}
+
+		if (loadFromDisk == true) {
+			JFileChooser fc = new JFileChooser();		// open mask image
+
+			if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+				String str = fc.getSelectedFile().getPath();
+				try {
+					IJ.run("Open...", "path='"+str+"'");
+					impMask = WindowManager.getCurrentImage();
+				} catch (RuntimeException e) {
+					JOptionPane.showMessageDialog(null,"Error opening Image","",JOptionPane.PLAIN_MESSAGE);
+					return;
+				}
+			}
+		}
+
+		if (impMask != null) {
+			jRenderer3D.setSurfacePlotMask(impMask);
+
+			setSurfacePlotType(plotType);
+
+			jRenderer3D.setSurfacePlotLight(light);
+
+			minSlider = sliderMin.getValue();
+			maxSlider = sliderMax.getValue();
+
+			jRenderer3D.setSurfacePlotMinMax(minSlider, maxSlider);
+			jRenderer3D.surfacePlotSetInverse(invertZ);
+
+			grid = 1 << sliderGridSize.getValue();
+			smooth = sliderSmoothing.getValue() * (grid / 512.);
+			if (smooth < 1) smooth = 0;
+			jRenderer3D.setSurfaceSmoothingFactor(smooth);
+			smoothOld = smooth;
+
+			setSurfaceColorType(colorType);
+			comboDisplayColors.setSelectedIndex(colorType);
+
+			renderAndUpdateDisplay();
+		}
+	}
 
 	private JPanel createSliderPanel1() {				
 		// create sliders 
