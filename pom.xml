@@ -45,18 +45,6 @@
 			<timezone>-6</timezone>
 		</developer>
 		<developer>
-			<id>ctrueden</id>
-			<name>Curtis Rueden</name>
-			<email>ctrueden@wisc.edu</email>
-			<url>http://loci.wisc.edu/people/curtis-rueden</url>
-			<organization>UW-Madison LOCI</organization>
-			<organizationUrl>http://loci.wisc.edu/</organizationUrl>
-			<roles>
-				<role>maintainer</role>
-			</roles>
-			<timezone>-6</timezone>
-		</developer>
-		<developer>
 			<id>hinerm</id>
 			<name>Mark Hiner</name>
 			<email>hiner@wisc.edu</email>
