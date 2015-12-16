@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>Interactive_3D_Surface_Plot</artifactId>
-	<version>2.4.1-SNAPSHOT</version>
+	<version>2.4.1</version>
 
 	<name>plugins/Interactive_3D_Surface_Plot.jar</name>
 	<description />
@@ -68,7 +68,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/fiji/Interactive_3D_Surface_Plot</connection>
 		<developerConnection>scm:git:git@github.com:fiji/Interactive_3D_Surface_Plot</developerConnection>
-		<tag>HEAD</tag>
+		<tag>Interactive_3D_Surface_Plot-2.4.1</tag>
 		<url>https://github.com/fiji/Interactive_3D_Surface_Plot</url>
 	</scm>
 	<issueManagement>
