@@ -83,8 +83,8 @@
 		<url>https://github.com/fiji/Interactive_3D_Surface_Plot/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://jenkins.imagej.net/job/Interactive_3D_Surface_Plot/</url>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/fiji/Interactive_3D_Surface_Plot</url>
 	</ciManagement>
 
 	<properties>
