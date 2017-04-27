@@ -3,20 +3,21 @@ package jRenderer3D;
 import java.awt.Color;
 
 /**
- * <p>This class represents a point in a 3D coordinate system. 
- * 		It is defined by its position (x,y,z), its size and its color.
+ * <p>
+ * This class represents a point in a 3D coordinate system. It is defined by its
+ * position (x,y,z), its size and its color.
  * </p>
- * 
- * <p>A point can be drawn in the folling modes:
- * 	<ul>
- * 		<li>DOTS: Draws point as a dot. Size information has no effect (fastest).</li>
- * 		<li>CIRCLES: Draws a point as a (2D) circle.</li>
- * 		<li>SPHERES: Draws a point as a sphere (slowest).</li>
- * 	</ul>
+ * <p>
+ * A point can be drawn in the following modes:
  * </p>
+ * <ul>
+ * <li>DOTS: Draws point as a dot. Size information has no effect (fastest).
+ * </li>
+ * <li>CIRCLES: Draws a point as a (2D) circle.</li>
+ * <li>SPHERES: Draws a point as a sphere (slowest).</li>
+ * </ul>
  * 
  * @author Kai Uwe Barthel
- *
  */
 public class Point3D {
 

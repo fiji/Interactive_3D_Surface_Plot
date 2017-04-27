@@ -12,140 +12,146 @@ import java.awt.image.MemoryImageSource;
 import java.util.ArrayList;
 
 /**
- * The framework JRenderer3D provides the possibility to implement easily a 3D display for ImageJ plugins.
+ * The framework JRenderer3D provides the possibility to implement easily a 3D
+ * display for ImageJ plugins.
  * <p>
- * 
- * 
- * <p>
- * 		Tne next section describes the basic scheme for rendering 3D scenes.<br />
- * 		After initializing a new 3D scene, objects are added, drawing parameters and global render parameters have to be set.<br />
- * 		At the end a rendering is performed that is writen to an image, which can be displayed with ImageJ.
+ * The next section describes the basic scheme for rendering 3D scenes. After
+ * initializing a new 3D scene, objects are added, drawing parameters and global
+ * render parameters have to be set. At the end a rendering is performed that is
+ * written to an image, which can be displayed with ImageJ.
  * </p>
+ * <h3>Example:</h3>
  * 
+ * <pre>
+ * // Setup 3D rendering
+ * JRenderer3D jRenderer3D;
+ * jRenderer3D = new JRenderer3D(xCenter, yCenter, zCenter); // size of the
+ *                                                           // rendered image
+ * 
+ * // Set or add one or more 3D objects like points or spheres:
+ * jRenderer3D.addPoint3D(250, 250, 20, 20, Color.WHITE);
+ * 
+ * // Or lines, texts, cubes:
+ * jRenderer3D.add3DCube(0, 0, 0, xSize, ySize, zSize, 0xFF000000);
+ * 
+ * // Set one image for a surface plot
+ * jRenderer3D.setSurfacePlot(imp);
+ * 
+ * // Or set a volume (a 3D-stack)
+ * jRenderer3D.setVolume(imagePlus); // set the volume
+ * 
+ * // Set the drawing modes
+ * jRenderer3D.setPoints3DDrawMode(JRenderer3D.POINTS_SPHERES);
+ * jRenderer3D.setSurfacePlotLut(JRenderer3D.LUT_ORANGE); // select a LUT
+ * jRenderer3D.setSurfacePlotLight(0.5); // set lighting
+ * jRenderer3D.setSurfacePlotMode(JRenderer3D.SURFACEPLOT_MESH); // set plot
+ *                                                               // mode to mesh
+ * 
+ * // Set global parameters
+ * jRenderer3D.setBackgroundColor(0xFF000050); // dark blue background
+ * jRenderer3D.setZAspect(4); // set the z-aspect ratio to 4
+ * jRenderer3D.setTransformScale(1.5); // scale factor
+ * jRenderer3D.setTransformRotationXYZ(80, 0, 160); // rotation angles (in
+ *                                                  // degrees)
+ * 
+ * // Render the image
+ * jRenderer3D.doRendering();
+ * 
+ * // Get the rendered new image
+ * Image image = jRenderer3D.getImage();
+ * 
+ * // And display it:
+ * ImagePlus impNew = new ImagePlus("Rendered Image", image);
+ * impNew.show();
+ * impNew.updateAndDraw();
+ * </pre>
+ * 
+ * <h3>Possible 3D elements to draw</h3>
+ * <ul>
+ * <li>{@link Point3D}</li>
+ * <li>{@link Line3D}</li>
+ * <li>{@link Text3D}</li>
+ * </ul>
+ * <h3>Surface</h3>
  * <p>
- * 		<i>Example:</i>
+ * Surface plots can be generate from all image types. Selections, which can be
+ * non-rectangular, are supported.
  * </p>
- * 
- *	<p>
- *	  	Setup 3D rendering<br />
- *	  	<tt>JRenderer3D jRenderer3D;<br />
- *	  	jRenderer3D = new JRenderer3D(xCenter, yCenter, zCenter); // size of the rendered image</tt>
- *  </p>
- *  
- *  <p>
- *  	Set or add one or more 3D objects like points or spheres:<br />
- *  	<tt>jRenderer3D.addPoint3D(250, 250,  20, 20, Color.WHITE);</tt>
+ * <p>
+ * The luminance of an image is interpreted as height for the plot. Internally
+ * the image is scaled to a 256x256 image using nearest neighbor sampling. Other
+ * dimensions for this image can be set by the setSurfacePlotGridSize method.
  * </p>
- * 
  * <p>
- * 		Or lines, texts, cubes:<br />
- * 		<tt>jRenderer3D.add3DCube(0, 0, 0, xSize, ySize, zSize, 0xFF000000);</tt>
+ * The surface plot has several drawing modes which av be set by
+ * setSurfacePlotMode:
  * </p>
- * 
+ * <ul>
+ * <li>Dots: All pixels are drawn as small dots.</li>
+ * <li>Lines: All pixels are connected in the x-direction.</li>
+ * <li>Mesh: All pixels are connected in the x- and y-direction.</li>
+ * <li>Filled: All pixels are connected without leaving holes</li>
+ * </ul>
  * <p>
- *	  	Set one image for a surface plot<br />
- *	  	<tt>jRenderer3D.setSurfacePlot(imp);</tt>
+ * Display Colors can be chosen from the original color, grayscale, different
+ * LUTs and orange.
  * </p>
- * 
  * <p>
- * 		Or set a volume (a 3D-stack) <br />
- * 		<tt>jRenderer3D.setVolume(imagePlus); // set the volume</tt>
- *  </p>
- *  
- * <p>
- * 		Set the drawing modes<br />
- * 		<tt>jRenderer3D.setPoints3DDrawMode(JRenderer3D.POINTS_SPHERES);<br />
- * 		jRenderer3D.setSurfacePlotLut(JRenderer3D.LUT_ORANGE); // select a LUT<br />
- * 		jRenderer3D.setSurfacePlotLight(0.5); // set lighting <br />
- * 		jRenderer3D.setSurfacePlotMode(JRenderer3D.SURFACEPLOT_MESH); // set plot mode to mesh</tt>
+ * Noisy images can be smoothed using the applySurfaceSmoothingFilter method.
+ * Setting lighting with the setSurfacePlotLight methode gives the impression
+ * that the plot was illuminated and so improves the visibility of small
+ * differences.
  * </p>
- * 
+ * <h3>Volume</h3>
  * <p>
- * 		Set global parameters<br />
- * 		<tt>jRenderer3D.setBackgroundColor(0xFF000050); // dark blue background<br />
- * 		jRenderer3D.setZAspect(4); 					// set the z-aspect ratio to 4<br />
- * 		jRenderer3D.setTransformScale(1.5); 		// scale factor<br />
- * 		jRenderer3D.setTransformRotationXYZ(80, 0, 160); // rotation angles (in degrees)</tt>
+ * Stacks can be shown as volumes or slices. 8, 16 and 32 bit stacks are
+ * supported. RGB-stacks are not supported for the moment.
  * </p>
- * 
  * <p>
- * 		Render the image <br />
- * 		<tt>jRenderer3D.doRendering();</tt>
+ * The display mode of a volume may be set with the setVolumeDrawMode method by
+ * using these constants:
+ * <ul>
+ * <li>VOLUME_SLICE_NEARESTNEIGHBOR: A slice through the volume. No
+ * interpolation is performed.</li>
+ * <li>VOLUME_SLICE_TRILINEAR: A slice through the volume using trilinear
+ * interpolation.</li>
+ * <li>VOLUME_DOTS: Voxels are shown according to their distance, no
+ * interpolation is performed.</li>
+ * <li>VOLUME_PROJECTION_TRILINEAR_BACK: A 3D volume is rendered. The opacity of
+ * the voxels is controlled by the setVolumeThreshold method. Values below the
+ * threshold are interpreted as transparent.</li>
+ * </ul>
+ * <p>
+ * The setVolumeCutDistance method sets the distance of the slice. For volume
+ * rendering only voxels further away than this distance are displayed. The
+ * z-aspect ratio of a volume is read automatically, but it can also be set
+ * using the setTransformZAspectRatio.
  * </p>
- * 
  * <p>
- * 		Get the rendered new image<br />
- * 		<tt>Image image = jRenderer3D.getImage();</tt>
+ * Different LUTs can be used for display by using the setVolumeLut method.
  * </p>
- * 
  * <p>
- * 		And display it<br />
- * 		<tt>ImagePlus impNew = new ImagePlus(&quot;Rendered Image&quot;, image);<br />
- * 		impNew.show();<br />
- * 		impNew.updateAndDraw();</tt>
+ * Before rendering a scene a geometrical transform is applied. Rotation angles
+ * for the x, y, and z-coordinate achses may be set by the setTransformRotation*
+ * methods. the global scale is set by the setTransformScale method. JRenderer3D
+ * assumes the following coordinate system:
  * </p>
- * 
- * <p/>
  * <p>
- *		<i>Possible 3D elements to draw:</i>
- *		<ul>
- *			<li>{@link Point3D}</li>
- *			<li>{@link Line3D}</li>
- * 			<li>{@link Text3D}</li>
- *          <li><strong>Surface: </strong><br>
- *          	<p>Surface plots can be generate from all image types. Selections, which can be non-rectangular, are supported.</p>
- *				<p>The luminance of an image is interpreted as height for the plot. 
- *					Internally the image is scaled to a 256x256 image using nearest neighbor sampling. 
- *					Other dimensions for this image can be set by the setSurfacePlotGridSize method. </p>
- *				<p>The surface plot has several drawing modes which av be set by setSurfacePlotMode:
- *				<ul>
- *				<li>Dots: All pixels are drawn as small dots.</li>
- *				<li>Lines: All pixels are connected in the x-direction.</li>
- *				<li>Mesh: All pixels are connected in the x- and y-direction.</li>
- *				<li>Filled: All pixels are connected without leaving holes </li>
- *				</ul>
- *				</p>
- *				<p>Display Colors can be chosen from the original color, grayscale, different LUTs and orange.</p>
- *				<p>Noisy images can be smoothed using the applySurfaceSmoothingFilter method. 
- *					Setting lighting with the setSurfacePlotLight methode gives the impression that the 
- *					plot was illuminated and so improves the visibility of small differences.
- *				</p>
- *          </li>
- *          <li><strong>Volume</strong>
- *          	<p>Stacks can be shown as volumes or slices.
- *				8, 16 and 32 bit stacks are supported. RGB-stacks are not supported for the moment.</p>
- *				<p>The display mode of a volume may be set with the setVolumeDrawMode method by using these constants:
- *				<ul>
- *					<li>VOLUME_SLICE_NEARESTNEIGHBOR: A slice through the volume. No interpolation is performed. </li>
- *					<li>VOLUME_SLICE_TRILINEAR: A slice through the volume using trilinear interpolation. </li>
- *					<li>VOLUME_DOTS: Voxels are shown according to their distance, no interpolation is performed.</li>
- *					<li>VOLUME_PROJECTION_TRILINEAR_BACK: A 3D volume is rendered. 
- *						The opacity of the voxels is controlled by the setVolumeThreshold method. 
- *						Values below the threshold are interpreted as transparent.</li>
- *				</ul>
- *				<p>The setVolumeCutDistance method sets the distance of the slice. 
- *					For volume rendering only voxels further away than this distance are displayed. 
- *					The z-aspect ratio of a volume is read automatically, but it can also be set 
- *					using the setTransformZAspectRatio. </p>
- *				<p> Different LUTs can be used for display by using the setVolumeLut method.</p>
- *			</li>
- *     </ul>
+ * <img alt="JRenderer3D coordinate system" src="img/xyz.gif">
+ * </p>
  * <p>
+ * The z-axis is pointing towards the viewer. The orientation of the z-axis may
+ * be changed with the method setTransformZOrientation. The entire scene is
+ * centered to the center coordinates that are passed with the constructor of
+ * JRenderer3D.
+ * </p>
  * <p>
- * Before rendering a scene a geometrical transform is applied. Rotation angles 
- * for the x, y, and z-coordinate achses may be set by the 
- * setTransformRotation* methods. the global scale is set by the 
- * setTransformScale method. JRederer3D assumes the following coordinate system:</p>
- * <p><img src="img/xyz.gif"/></p>
- * <p>The z-axis is pointing towards the viewer. The orientation of the z-axis may be changed with the method setTransformZOrientation. 
- * 		The entire scene is centered to the center coordinates that are passed with the constructor of JRenderer3D.</p>
- * <p> The 3D scene is rendered to an image buffer. The initial size of this buffer
- *		is 512x512 pixels: This size can be changed with the setBufferSize method. </p>
+ * The 3D scene is rendered to an image buffer. The initial size of this buffer
+ * is 512x512 pixels: This size can be changed with the setBufferSize method.
+ * </p>
  *
  * @version 1.0
  * @author Kai Uwe Barthel
- * 
- 
  */
 public class JRenderer3D {
 
@@ -379,7 +385,7 @@ public class JRenderer3D {
 	 * Creates a new JRenderer3D object. <p> 
 	 *
 	 * This has always to be the first step to generate a 3D scene.
-	 *  
+	 * 
 	 * @param xCenter The x-coordinate of the rotation / plot center.
 	 * @param yCenter The y-coordinate of the rotation / plot center.
 	 * @param zCenter The z-coordinate of the rotation / plot center.
@@ -396,7 +402,7 @@ public class JRenderer3D {
 	
 	
    /*************************************************************
-	*            P R I V A T E   M E T H O D S                  *
+	* P R I V A T E   M E T H O D S                  *
 	*************************************************************/
 	
 	
@@ -898,7 +904,7 @@ public class JRenderer3D {
 	}
 
    /*************************************************************
-	*            P U B L I C   M E T H O D S                    *
+	* P U B L I C   M E T H O D S                    *
 	*************************************************************/
 	
 	
@@ -935,7 +941,7 @@ public class JRenderer3D {
 	}
 	
    /*************************************************************
-	*                    S E T T E R                            *
+	* S E T T E R                            *
 	*************************************************************/
 	
 	
@@ -1144,13 +1150,12 @@ public class JRenderer3D {
 	}
 	
 	/**
-	 * Set subsampling factors (used by the drawing mode volume dots). 
-	 * This allows faster drawing in the VOLUME_DOTS mode. 
-	 * (default values are 1)
+	 * Set subsampling factors (used by the drawing mode volume dots). This allows
+	 * faster drawing in the VOLUME_DOTS mode. (default values are 1)
 	 * 
-	 * @param volume_dotsDeltaX  	subsampling factor in x direction
-	 * @param volume_dotsDeltaY
-	 * @param volume_dotsDeltaZ
+	 * @param volume_dotsDeltaX subsampling factor in x direction
+	 * @param volume_dotsDeltaY subsampling factor in y direction
+	 * @param volume_dotsDeltaZ subsampling factor in z direction
 	 */
 	public void setVolumeDotsSubsampling(int volume_dotsDeltaX, int volume_dotsDeltaY, int volume_dotsDeltaZ) {
 		this.volume_dotsDeltaX = volume_dotsDeltaX;
@@ -1169,7 +1174,7 @@ public class JRenderer3D {
 	 * @param volume_cutDist the cut distance
 	 */
 	public void setVolumeCutDistance(int volume_cutDist) {
-		this.volume_cutDist = volume_cutDist*transform.getZOrientation();	
+		this.volume_cutDist = volume_cutDist*transform.getZOrientation();
 		if (volume != null) {
 			volume.setVolumeCutDist(this.volume_cutDist);
 		}
@@ -1202,8 +1207,8 @@ public class JRenderer3D {
 	 * Chooses the coordinate system.
 	 * 
 	 * @param zOrientation 
-	 * 	 <br> -1: left hand coordinate system
-	 *   <br>  1: right hand coordinate system 
+	 * <br> -1: left hand coordinate system
+	 * <br>  1: right hand coordinate system 
 
 	 */
 	public void setTransformZOrientation(int zOrientation) {
@@ -1407,12 +1412,13 @@ public class JRenderer3D {
 	
 	/**
 	 * Adds a text to the 3D scene.
+	 * 
 	 * @param text
-	 * @param x		the x position of the text  
-	 * @param y		the y position
-	 * @param z		the z position
-	 * @param color	the text color
-	 * @param size	the font size 
+	 * @param x the x position of the text
+	 * @param y the y position
+	 * @param z the z position
+	 * @param color the text color
+	 * @param size the font size
 	 */
 	public void addText3D(String text, int x, int y, int z, Color color, int size) {
 		if (this.text3D == null) this.text3D = new ArrayList();
@@ -1428,12 +1434,13 @@ public class JRenderer3D {
 	
 	/**
 	 * Adds a text to the 3D scene.
+	 * 
 	 * @param text
-	 * @param x		the x position of the text  
-	 * @param y		the y position
-	 * @param z		the z position
-	 * @param color	the text color
-	 * @param size	the font size 
+	 * @param x the x position of the text
+	 * @param y the y position
+	 * @param z the z position
+	 * @param rgb the text color
+	 * @param size the font size
 	 */
 	
 	public void addText3D(String text, int x, int y, int z, int rgb, int size) {
@@ -1668,7 +1675,7 @@ public class JRenderer3D {
 	
 	
    /*************************************************************
-	*                    G E T T E R                            *
+	* G E T T E R                            *
 	*************************************************************/
 	
 	/**
