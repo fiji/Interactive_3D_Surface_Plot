@@ -117,13 +117,20 @@ class SurfacePlot {
 					//IJ.log("surf min: " + min_);   //LL ================================
 					//IJ.log("surf max: " + max_);   //LL ================================
 					double a = 0, b = 1;
-	
+									
 					Calibration cal = imp.getCalibration();
 	
 					if (cal != null) {
 						if (cal.calibrated()) {
 							min_ = cal.getCValue((int)min_);
 							max_ = cal.getCValue((int)max_);
+							
+							if (min_ > max_) {
+								double tmp = min_;
+								min_ = max_;
+								max_ = tmp;
+							}
+								
 	
 							double[] coef = cal.getCoefficients();
 							if (coef != null) {		
@@ -140,10 +147,19 @@ class SurfacePlot {
 						for (int y = 0; y < heightTmp; y++) {
 							for (int x = 0; x <widthTmp; x++) {
 	
-								int val = (int) ((int)(0xFFFF & pixels[pos++])*b + a - min_);
-								if (val<0f) val = 0;
+								int val;
+								if (cal != null) {
+									val = (int)(0xFFFF & pixels[pos++]);
+									val = (int) (cal.getCValue(val) - min_);
+								}	
+								else 
+									val = (int) ((int)(0xFFFF & pixels[pos++])*b + a - min_);
+									
+								if (val<0f) 
+									val = 0;
 								val = (int)(val*scale);
-								if (val>255) val = 255;
+								if (val>255) 
+									val = 255;
 								lutPixels[y*widthTmp+x] = (byte)(val);  
 							}
 						}

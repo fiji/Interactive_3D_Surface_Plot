@@ -155,7 +155,7 @@ import javax.swing.event.ChangeListener;
 
 public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, MouseMotionListener, ItemListener{
 	
-	private final String version = " v2.4.1 ";     
+	private final String version = " v3.0.1 ";     
 	
 	// constants
 	private final int DOTS = 0;
@@ -310,11 +310,12 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		
 		new ImageJ(); // !!!
 
+		IJ.open("/Users/barthel/Pictures/Beispielbilder/calibration.tif");
 		//IJ.open("/Users/barthel/Pictures/Beispielbilder/plot2.tif");
 		//IJ.open("/Users/barthel/Pictures/Beispielbilder/baboon.jpg");
 		
 		//IJ.open("/Users/barthel/Pictures/Beispielbilder/InteractivePlot-32bit-grey.tif");
-		IJ.open("/Users/barthel/Pictures/Beispielbilder/InteractivePlot-32bit-jet.tif");
+		//IJ.open("/Users/barthel/Pictures/Beispielbilder/InteractivePlot-32bit-jet.tif");
 				
 //		IJ.run("Set Scale...", "distance=1.001 known=100 pixel=1 unit=µm");
 //		//IJ.run("Set Scale...", "distance=2.2 known=5 pixel=1 unit=µm");
@@ -712,8 +713,31 @@ public class Interactive_3D_Surface_Plot implements PlugIn, MouseListener, Mouse
 		scaledWidth = cal.getX(imageWidth);
 		scaledHeight = cal.getY(imageHeight);
 		
-		minVal = ip.getMin();
-		maxVal = ip.getMax();
+		
+		double min_ = ip.getMin();
+		double max_ = ip.getMax();
+						
+		Calibration cal = image.getCalibration();
+
+		if (cal != null) {
+			if (cal.calibrated()) {
+				min_ = cal.getCValue((int)min_);
+				max_ = cal.getCValue((int)max_);
+				
+				if (min_ > max_) {
+					double tmp = min_;
+					min_ = max_;
+					max_ = tmp;
+				}
+			}
+			
+		}
+		
+		minVal = min_;
+		maxVal = max_;
+		
+		
+		
 		units = cal.getUnits();
 		
 //		IJ.log("Units: " + units);
