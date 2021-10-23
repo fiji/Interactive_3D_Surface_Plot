@@ -11,7 +11,7 @@
 
 	<groupId>sc.fiji</groupId>
 	<artifactId>Interactive_3D_Surface_Plot</artifactId>
-	<version>3.0.1-SNAPSHOT</version>
+	<version>3.0.1</version>
 
 	<name>Interactive 3D Surface Plot</name>
 	<description>Interactive 3D Surface Plot plugin for Fiji.</description>
@@ -75,7 +75,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/fiji/Interactive_3D_Surface_Plot</connection>
 		<developerConnection>scm:git:git@github.com:fiji/Interactive_3D_Surface_Plot</developerConnection>
-		<tag>HEAD</tag>
+		<tag>Interactive_3D_Surface_Plot-3.0.1</tag>
 		<url>https://github.com/fiji/Interactive_3D_Surface_Plot</url>
 	</scm>
 	<issueManagement>
